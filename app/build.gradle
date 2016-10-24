@@ -1,0 +1,44 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.github.kt3k.coveralls'
+apply plugin: 'jacoco'
+
+android {
+    compileSdkVersion rootProject.ext.sdk_version
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion rootProject.ext.sdk_version
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            testCoverageEnabled true
+        }
+        lintOptions {
+            abortOnError false
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    testCompile 'junit:junit:4.12'
+
+    compile "com.github.qiyulan:Android-Base-Utils:V1.5.0"
+    compile "com.github.Qixingchen:Android-Network-Utils:V1.0.0"
+    compile "com.github.Qixingchen:Rx-Utils:V1.0.0"
+    compile "com.android.support:appcompat-v7:$supportLibraryVersion"
+    //corp
+    compile 'com.soundcloud.android:android-crop:1.0.1@aar'
+}
