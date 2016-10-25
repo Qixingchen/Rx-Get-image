@@ -40,3 +40,38 @@ dependencies {
     //corp
     compile 'com.soundcloud.android:android-crop:1.0.1@aar'
 }
+// build a jar with source files
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    failOnError false
+    source = android.sourceSets.main.java.sourceFiles
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    classpath += configurations.compile
+}
+
+// build a jar with javadoc
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+[javadoc]*.options*.encoding = 'UTF-8'
+[javadoc]*.options*.charSet = 'UTF-8'
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+coveralls {
+    jacocoReportPath = "${buildDir}/reports/jacoco/debug/jacoco.xml"
+}
+
+tasks.coveralls {
+    dependsOn 'assembleDebugUnitTest'
+    onlyIf { System.env.'CI' }
+}
