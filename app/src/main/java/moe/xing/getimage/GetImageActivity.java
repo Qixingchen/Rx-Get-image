@@ -1,6 +1,7 @@
 package moe.xing.getimage;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -14,7 +15,6 @@ import java.net.URI;
 import moe.xing.baseutils.Init;
 import moe.xing.baseutils.utils.FileUtils;
 import moe.xing.baseutils.utils.IntentUtils;
-import moe.xing.baseutils.utils.LogHelper;
 import moe.xing.rx_utils.RxFileUtils;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -31,7 +31,14 @@ public class GetImageActivity extends Activity {
     private static final int SELECT_PHOTO = 1;
     private static final int TAKE_PHOTO = 2;
     private static final int CORP_PHOTO = 3;
+    private static final String SUBSCRIBER_ID = "SubscriberID";
     private Uri corpedImage;
+
+    public static Intent getStartIntent(Context context, int subscriberID) {
+        Intent intent = new Intent(context, GetImageActivity.class);
+        intent.putExtra(SUBSCRIBER_ID, subscriberID);
+        return intent;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +81,8 @@ public class GetImageActivity extends Activity {
 
                                 @Override
                                 public void onError(Throwable e) {
-                                    LogHelper.Toast(e.getLocalizedMessage());
+                                    RxGetImage.getInstance().onError(e, getSubscriberID());
+                                    finish();
                                 }
 
                                 @Override
@@ -86,17 +94,25 @@ public class GetImageActivity extends Activity {
                 case CORP_PHOTO:
                     if (corpedImage != null) {
                         File corped = new File(URI.create(corpedImage.toString()));
-                        RxGetImage.getInstance().onAns(corped);
+                        RxGetImage.getInstance().onAns(corped, getSubscriberID());
+                        finish();
+                    } else {
+                        RxGetImage.getInstance().onError(new Throwable("空文件"), getSubscriberID());
                         finish();
                     }
                     break;
                 default:
                     super.onActivityResult(requestCode, resultCode, data);
+                    finish();
             }
         } else {
-            RxGetImage.getInstance().onAns(null);
+            RxGetImage.getInstance().onError(new Throwable("用户放弃"), getSubscriberID());
             finish();
         }
+    }
+
+    private int getSubscriberID() {
+        return getIntent().getIntExtra(SUBSCRIBER_ID, 0);
     }
 
     /**

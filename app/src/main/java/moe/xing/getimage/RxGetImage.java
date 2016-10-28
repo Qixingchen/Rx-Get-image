@@ -3,9 +3,9 @@ package moe.xing.getimage;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.SparseArray;
 
 import java.io.File;
-import java.util.ArrayList;
 
 import moe.xing.baseutils.Init;
 import rx.Observable;
@@ -21,7 +21,7 @@ import rx.Subscriber;
 public class RxGetImage {
 
     private static RxGetImage sSingleton;
-    private ArrayList<Subscriber<? super File>> mSubscribers = new ArrayList<>();
+    private SparseArray<Subscriber<? super File>> mSubscribers = new SparseArray<>();
 
 
     public RxGetImage() {
@@ -52,10 +52,17 @@ public class RxGetImage {
         return Observable.create(new Observable.OnSubscribe<File>() {
             @Override
             public void call(Subscriber<? super File> subscriber) {
-                Intent intent = new Intent(Init.getApplication(), GetImageActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                Init.getApplication().startActivity(intent);
-                mSubscribers.add(subscriber);
+                synchronized (RxGetImage.class) {
+                    int i = 1;
+                    while (mSubscribers.get(i) != null) {
+                        i++;
+                    }
+
+                    Intent intent = GetImageActivity.getStartIntent(Init.getApplication(), i);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    Init.getApplication().startActivity(intent);
+                    mSubscribers.append(i, subscriber);
+                }
             }
         });
     }
@@ -65,14 +72,11 @@ public class RxGetImage {
      *
      * @param file 返回的图片 可能为空(用户放弃)
      */
-    void onAns(@Nullable File file) {
-        for (Subscriber<? super File> subscriber : mSubscribers) {
-            if (file != null) {
-                subscriber.onNext(file);
-            }
-            subscriber.onCompleted();
+    void onAns(@Nullable File file, int subscriberID) {
+        Subscriber<? super File> subscriber = mSubscribers.get(subscriberID);
+        if (subscriber != null && file != null) {
+            subscriber.onNext(file);
         }
-        mSubscribers.clear();
     }
 
     /**
@@ -80,10 +84,8 @@ public class RxGetImage {
      *
      * @param message 错误信息
      */
-    void onError(String message) {
-        for (Subscriber<? super File> subscriber : mSubscribers) {
-            subscriber.onError(new Throwable(message));
-        }
-        mSubscribers.clear();
+    void onError(Throwable message, int subscriberID) {
+        Subscriber<? super File> subscriber = mSubscribers.get(subscriberID);
+        subscriber.onError(message);
     }
 }
