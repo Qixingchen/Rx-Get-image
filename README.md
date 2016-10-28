@@ -10,4 +10,25 @@ Rx-Get-image
  use [jitpack](https://jitpack.io/#Qixingchen/Rx-Get-image)
 
 ### how to use
+
+``` java
+    RxGetImage.getInstance().getImage()
+    .subscribe(new Subscriber<File>() {
+        @Override
+        public void onCompleted() {
+             // todo
+        }
+
+        @Override
+        public void onError(Throwable e) {
+            // todo
+        }
+
+        @Override
+        public void onNext(File file) {
+             // todo
+        }
+    });
+```
+
 read javadoc in [jitpack](https://jitpack.io/com/github/Qixingchen/Rx-Get-image/-SNAPSHOT/javadoc/)
