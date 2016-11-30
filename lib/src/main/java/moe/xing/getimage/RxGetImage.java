@@ -1,6 +1,7 @@
 package moe.xing.getimage;
 
 import android.content.Intent;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
@@ -20,9 +21,11 @@ import rx.Subscriber;
 @SuppressWarnings("WeakerAccess")
 public class RxGetImage {
 
+    public static final int MODE_SINGLE = 1;
+    public static final int MODE_SINGLE_AND_CORP = 2;
+    public static final int MODE_MULTIPLE = 3;
     private static RxGetImage sSingleton;
     private SparseArray<Subscriber<? super File>> mSubscribers = new SparseArray<>();
-
 
     public RxGetImage() {
 
@@ -48,7 +51,7 @@ public class RxGetImage {
      * @return Observable<File>
      */
     @NonNull
-    public Observable<File> getImage() {
+    public Observable<File> getImage(@SelectMode final int selectMode) {
         return Observable.create(new Observable.OnSubscribe<File>() {
             @Override
             public void call(Subscriber<? super File> subscriber) {
@@ -58,7 +61,32 @@ public class RxGetImage {
                         i++;
                     }
 
-                    Intent intent = GetImageActivity.getStartIntent(Init.getApplication(), i);
+                    Intent intent = GetImageActivity.getStartIntent(Init.getApplication(), i, selectMode, 1);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    Init.getApplication().startActivity(intent);
+                    mSubscribers.append(i, subscriber);
+                }
+            }
+        });
+    }
+
+    /**
+     * 获取多张图片
+     *
+     * @param maxSize 最大数量
+     * @return Observable<File>
+     */
+    @NonNull
+    public Observable<File> getMultipleImage(final int maxSize) {
+        return Observable.create(new Observable.OnSubscribe<File>() {
+            @Override
+            public void call(Subscriber<? super File> subscriber) {
+                synchronized (RxGetImage.class) {
+                    int i = 1;
+                    while (mSubscribers.get(i) != null) {
+                        i++;
+                    }
+                    Intent intent = GetImageActivity.getStartIntent(Init.getApplication(), i, MODE_MULTIPLE, maxSize);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     Init.getApplication().startActivity(intent);
                     mSubscribers.append(i, subscriber);
@@ -87,5 +115,9 @@ public class RxGetImage {
     void onError(Throwable message, int subscriberID) {
         Subscriber<? super File> subscriber = mSubscribers.get(subscriberID);
         subscriber.onError(message);
+    }
+
+    @IntDef({MODE_SINGLE, MODE_MULTIPLE, MODE_SINGLE_AND_CORP})
+    public @interface SelectMode {
     }
 }
