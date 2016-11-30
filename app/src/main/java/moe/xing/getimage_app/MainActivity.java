@@ -38,11 +38,12 @@ public class MainActivity extends AppCompatActivity {
                 RxGetImage.getInstance().getImage(RxGetImage.MODE_SINGLE).subscribe(new Subscriber<File>() {
                     @Override
                     public void onCompleted() {
+                        Toast.makeText(v.getContext(), "complete", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        Toast.makeText(v.getContext(), e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(v.getContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
@@ -60,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
                 RxGetImage.getInstance().getMultipleImage(Integer.MAX_VALUE).subscribe(new Subscriber<File>() {
                     @Override
                     public void onCompleted() {
+                        Toast.makeText(v.getContext(), "complete", Toast.LENGTH_LONG).show();
                     }
 
                     @Override

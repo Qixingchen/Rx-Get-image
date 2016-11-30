@@ -117,6 +117,11 @@ public class RxGetImage {
         subscriber.onError(message);
     }
 
+    void onComplete(int subscriberID) {
+        Subscriber<? super File> subscriber = mSubscribers.get(subscriberID);
+        subscriber.onCompleted();
+    }
+
     @IntDef({MODE_SINGLE, MODE_MULTIPLE, MODE_SINGLE_AND_CORP})
     public @interface SelectMode {
     }

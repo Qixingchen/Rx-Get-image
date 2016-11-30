@@ -97,6 +97,7 @@ public class GetImageActivity extends Activity {
                     if (corpedImage != null) {
                         File corped = new File(URI.create(corpedImage.toString()));
                         RxGetImage.getInstance().onAns(corped, getSubscriberID());
+                        RxGetImage.getInstance().onComplete(getSubscriberID());
                         finish();
                     } else {
                         RxGetImage.getInstance().onError(new Throwable("空文件"), getSubscriberID());
@@ -171,6 +172,7 @@ public class GetImageActivity extends Activity {
                     .subscribe(new Subscriber<File>() {
                         @Override
                         public void onCompleted() {
+                            RxGetImage.getInstance().onComplete(getSubscriberID());
                             finish();
                         }
 
@@ -216,6 +218,7 @@ public class GetImageActivity extends Activity {
                             toCorp(s);
                         } else {
                             RxGetImage.getInstance().onAns(s, getSubscriberID());
+                            RxGetImage.getInstance().onComplete(getSubscriberID());
                             finish();
                         }
                     }
