@@ -8,6 +8,8 @@
             android:launchMode="singleTop"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
 
+        <activity android:name="com.soundcloud.android.crop.CropImageActivity"/>
+
     </application>
 
 </manifest>

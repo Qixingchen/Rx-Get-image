@@ -12,17 +12,32 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <Button
-            android:id="@+id/single"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="获取单张图"/>
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/multiple"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="获取多图"/>
+            <Button
+                android:id="@+id/single"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="获取单张图"/>
+
+            <Button
+                android:id="@+id/single_corp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="获取单张图并裁剪"/>
+
+            <Button
+                android:id="@+id/multiple"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="获取多图"/>
+
+
+        </LinearLayout>
+
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recycler_view"

@@ -11,7 +11,6 @@ import android.widget.Toast;
 import java.io.File;
 
 import moe.xing.baseutils.Init;
-import moe.xing.getimage.BuildConfig;
 import moe.xing.getimage.RxGetImage;
 import moe.xing.getimage_app.databinding.ActivityMainBinding;
 import rx.Subscriber;
@@ -24,13 +23,36 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Init.getInstance(getApplication(), BuildConfig.DEBUG, "1", "");
+        Init.getInstance(getApplication(), true, "1", "");
         mBinding = DataBindingUtil.inflate(LayoutInflater.from(this), R.layout.activity_main, null, false);
         setContentView(mBinding.getRoot());
 
         mAdapter = new ImageAdapter();
         mBinding.recyclerView.setLayoutManager(new GridLayoutManager(this, 3));
         mBinding.recyclerView.setAdapter(mAdapter);
+
+        mBinding.singleCorp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                RxGetImage.getInstance().getImage(RxGetImage.MODE_SINGLE_AND_CORP).subscribe(new Subscriber<File>() {
+                    @Override
+                    public void onCompleted() {
+                        Toast.makeText(v.getContext(), "complete", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(v.getContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onNext(File file) {
+                        mAdapter.addData(file);
+                    }
+                });
+
+            }
+        });
 
         mBinding.single.setOnClickListener(new View.OnClickListener() {
             @Override

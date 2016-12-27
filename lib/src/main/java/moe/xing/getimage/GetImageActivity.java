@@ -33,9 +33,9 @@ import rx.schedulers.Schedulers;
 
 public class GetImageActivity extends Activity {
 
-    private static final int SELECT_PHOTO = 1;
-    private static final int TAKE_PHOTO = 2;
-    private static final int CORP_PHOTO = 3;
+    private static final int SELECT_PHOTO = 10;
+    private static final int TAKE_PHOTO = 20;
+    private static final int CORP_PHOTO = 30;
     private static final String SUBSCRIBER_ID = "SubscriberID";
     private static final String SELECT_MODE = "select_mode";
     private static final String MAX_SIZE = "max_size";
@@ -83,7 +83,6 @@ public class GetImageActivity extends Activity {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
         if (resultCode == Activity.RESULT_OK) {
             switch (requestCode) {
                 case SELECT_PHOTO:
@@ -203,7 +202,6 @@ public class GetImageActivity extends Activity {
                 .subscribe(new Subscriber<File>() {
                     @Override
                     public void onCompleted() {
-                        finish();
                     }
 
                     @Override
