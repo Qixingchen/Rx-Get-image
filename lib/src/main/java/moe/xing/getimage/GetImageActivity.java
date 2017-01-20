@@ -6,6 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.annotation.Nullable;
+import android.support.v4.content.FileProvider;
 import android.widget.Toast;
 
 import com.soundcloud.android.crop.Crop;
@@ -13,6 +16,8 @@ import com.soundcloud.android.crop.Crop;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 
 import moe.xing.baseutils.Init;
@@ -40,6 +45,8 @@ public class GetImageActivity extends Activity {
     private static final String SELECT_MODE = "select_mode";
     private static final String MAX_SIZE = "max_size";
     private Uri corpedImage;
+    @Nullable
+    private File takenFile = null;
 
     /**
      * 获取启动 intent
@@ -60,18 +67,27 @@ public class GetImageActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState == null) {
-            doSelect();
+            doGet();
         }
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
-        doSelect();
+        doGet();
     }
 
     /**
      * 选择图片
      */
+    private void doGet() {
+        int mode = getIntent().getIntExtra(SELECT_MODE, RxGetImage.MODE_SINGLE);
+        if (mode == RxGetImage.MODE_TAKE_PHOTO || mode == RxGetImage.MODE_TAKE_PHOTO_AND_CORP) {
+            doTake();
+        } else {
+            doSelect();
+        }
+    }
+
     private void doSelect() {
         Intent photoPickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
         photoPickerIntent.setType("image/*");
@@ -79,6 +95,25 @@ public class GetImageActivity extends Activity {
             photoPickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         }
         IntentUtils.startIntentForResult(photoPickerIntent, this, SELECT_PHOTO);
+    }
+
+    private void doTake() {
+        Intent takeIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        try {
+            takenPhotoFile();
+        } catch (IOException ioe) {
+            RxGetImage.getInstance().onError(new Throwable("无法创建相片,可能空间已满"), getSubscriberID());
+            finish();
+            return;
+        }
+        if (takenFile != null) {
+            Uri photoURI = FileProvider.getUriForFile(this,
+                    "com.example.android.fileprovider",
+                    takenFile);
+            takeIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+            IntentUtils.startIntentForResult(takeIntent, this, TAKE_PHOTO);
+        }
+
     }
 
     @Override
@@ -103,6 +138,18 @@ public class GetImageActivity extends Activity {
                         finish();
                     }
                     break;
+                case TAKE_PHOTO:
+                    if (takenFile != null && takenFile.exists() && takenFile.length() > 0) {
+                        if (RxGetImage.MODE_TAKE_PHOTO_AND_CORP == getSelectMode()) {
+                            toCorp(takenFile);
+                        } else {
+                            RxGetImage.getInstance().onAns(takenFile, getSubscriberID());
+                            RxGetImage.getInstance().onComplete(getSubscriberID());
+                        }
+                    } else {
+                        RxGetImage.getInstance().onError(new Throwable("空文件"), getSubscriberID());
+                        finish();
+                    }
                 default:
                     super.onActivityResult(requestCode, resultCode, data);
                     finish();
@@ -223,7 +270,6 @@ public class GetImageActivity extends Activity {
                 });
     }
 
-
     private int getSubscriberID() {
         return getIntent().getIntExtra(SUBSCRIBER_ID, 0);
     }
@@ -249,5 +295,15 @@ public class GetImageActivity extends Activity {
             e.printStackTrace();
         }
         corpedImage = null;
+    }
+
+    private File takenPhotoFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+
+        File image = FileUtils.getCacheFile(timeStamp);
+        takenFile = image;
+
+        return image;
     }
 }

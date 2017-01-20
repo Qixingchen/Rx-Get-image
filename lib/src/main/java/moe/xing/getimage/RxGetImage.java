@@ -24,6 +24,8 @@ public class RxGetImage {
     public static final int MODE_SINGLE = 1;
     public static final int MODE_SINGLE_AND_CORP = 2;
     public static final int MODE_MULTIPLE = 3;
+    public static final int MODE_TAKE_PHOTO = 4;
+    public static final int MODE_TAKE_PHOTO_AND_CORP = 5;
     private static RxGetImage sSingleton;
     private SparseArray<Subscriber<? super File>> mSubscribers = new SparseArray<>();
 
@@ -51,7 +53,7 @@ public class RxGetImage {
      * @return Observable<File>
      */
     @NonNull
-    public Observable<File> getImage(@SelectMode final int selectMode) {
+    public Observable<File> getImage(final boolean needCorp) {
         return Observable.create(new Observable.OnSubscribe<File>() {
             @Override
             public void call(Subscriber<? super File> subscriber) {
@@ -61,7 +63,8 @@ public class RxGetImage {
                         i++;
                     }
 
-                    Intent intent = GetImageActivity.getStartIntent(Init.getApplication(), i, selectMode, 1);
+                    Intent intent = GetImageActivity.getStartIntent(Init.getApplication(), i,
+                            needCorp ? MODE_SINGLE_AND_CORP : MODE_SINGLE, 1);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     Init.getApplication().startActivity(intent);
                     mSubscribers.append(i, subscriber);
@@ -96,6 +99,31 @@ public class RxGetImage {
     }
 
     /**
+     * 拍摄图片
+     *
+     * @return Observable<File>
+     */
+    @NonNull
+    public Observable<File> takeImage(final boolean needCorp) {
+        return Observable.create(new Observable.OnSubscribe<File>() {
+            @Override
+            public void call(Subscriber<? super File> subscriber) {
+                synchronized (RxGetImage.class) {
+                    int i = 1;
+                    while (mSubscribers.get(i) != null) {
+                        i++;
+                    }
+                    Intent intent = GetImageActivity.getStartIntent(Init.getApplication(), i,
+                            needCorp ? MODE_TAKE_PHOTO_AND_CORP : MODE_TAKE_PHOTO, 1);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    Init.getApplication().startActivity(intent);
+                    mSubscribers.append(i, subscriber);
+                }
+            }
+        });
+    }
+
+    /**
      * 设置返回的图片
      *
      * @param file 返回的图片 可能为空(用户放弃)
@@ -114,15 +142,19 @@ public class RxGetImage {
      */
     void onError(Throwable message, int subscriberID) {
         Subscriber<? super File> subscriber = mSubscribers.get(subscriberID);
-        subscriber.onError(message);
+        if (subscriber != null) {
+            subscriber.onError(message);
+        }
     }
 
     void onComplete(int subscriberID) {
         Subscriber<? super File> subscriber = mSubscribers.get(subscriberID);
-        subscriber.onCompleted();
+        if (subscriber != null) {
+            subscriber.onCompleted();
+        }
     }
 
-    @IntDef({MODE_SINGLE, MODE_MULTIPLE, MODE_SINGLE_AND_CORP})
+    @IntDef({MODE_SINGLE, MODE_MULTIPLE, MODE_SINGLE_AND_CORP, MODE_TAKE_PHOTO, MODE_TAKE_PHOTO_AND_CORP})
     public @interface SelectMode {
     }
 }

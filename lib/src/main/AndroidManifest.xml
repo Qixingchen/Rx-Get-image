@@ -1,14 +1,27 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="moe.xing.getimage">
 
-    <application
-        >
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false"/>
+
+    <application>
         <activity
             android:name=".GetImageActivity"
             android:launchMode="singleTop"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
 
         <activity android:name="com.soundcloud.android.crop.CropImageActivity"/>
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.example.android.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/get_image_provider"/>
+        </provider>
 
     </application>
 
