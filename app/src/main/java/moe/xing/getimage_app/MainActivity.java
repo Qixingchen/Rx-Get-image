@@ -31,25 +31,28 @@ public class MainActivity extends AppCompatActivity {
         mBinding.recyclerView.setLayoutManager(new GridLayoutManager(this, 3));
         mBinding.recyclerView.setAdapter(mAdapter);
 
+        final Subscriber<File> fileSubscriber = new Subscriber<File>() {
+            @Override
+            public void onCompleted() {
+                Toast.makeText(MainActivity.this, "complete", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Toast.makeText(MainActivity.this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onNext(File file) {
+                mAdapter.addData(file);
+            }
+        };
+
+
         mBinding.singleCorp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                RxGetImage.getInstance().getImage(RxGetImage.MODE_SINGLE_AND_CORP).subscribe(new Subscriber<File>() {
-                    @Override
-                    public void onCompleted() {
-                        Toast.makeText(v.getContext(), "complete", Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        Toast.makeText(v.getContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onNext(File file) {
-                        mAdapter.addData(file);
-                    }
-                });
+                RxGetImage.getInstance().getImage(true).subscribe(fileSubscriber);
 
             }
         });
@@ -57,22 +60,7 @@ public class MainActivity extends AppCompatActivity {
         mBinding.single.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                RxGetImage.getInstance().getImage(RxGetImage.MODE_SINGLE).subscribe(new Subscriber<File>() {
-                    @Override
-                    public void onCompleted() {
-                        Toast.makeText(v.getContext(), "complete", Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        Toast.makeText(v.getContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onNext(File file) {
-                        mAdapter.addData(file);
-                    }
-                });
+                RxGetImage.getInstance().getImage(false).subscribe(fileSubscriber);
 
             }
         });
@@ -80,23 +68,15 @@ public class MainActivity extends AppCompatActivity {
         mBinding.multiple.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                RxGetImage.getInstance().getMultipleImage(Integer.MAX_VALUE).subscribe(new Subscriber<File>() {
-                    @Override
-                    public void onCompleted() {
-                        Toast.makeText(v.getContext(), "complete", Toast.LENGTH_LONG).show();
-                    }
+                RxGetImage.getInstance().getMultipleImage(Integer.MAX_VALUE).subscribe(fileSubscriber);
 
-                    @Override
-                    public void onError(Throwable e) {
-                        Toast.makeText(v.getContext(), e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                    }
+            }
+        });
 
-                    @Override
-                    public void onNext(File file) {
-                        mAdapter.addData(file);
-                    }
-                });
-
+        mBinding.take.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RxGetImage.getInstance().takeImage(true).subscribe(fileSubscriber);
             }
         });
 

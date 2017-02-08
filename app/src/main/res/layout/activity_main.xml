@@ -35,6 +35,12 @@
                 android:layout_height="wrap_content"
                 android:text="获取多图"/>
 
+            <Button
+                android:id="@+id/take"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="拍摄并裁剪"/>
+
 
         </LinearLayout>
 

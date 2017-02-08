@@ -108,7 +108,7 @@ public class GetImageActivity extends Activity {
         }
         if (takenFile != null) {
             Uri photoURI = FileProvider.getUriForFile(this,
-                    "com.example.android.fileprovider",
+                    Init.getApplication().getPackageName() + ".fileProvider",
                     takenFile);
             takeIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
             IntentUtils.startIntentForResult(takeIntent, this, TAKE_PHOTO);
@@ -150,6 +150,7 @@ public class GetImageActivity extends Activity {
                         RxGetImage.getInstance().onError(new Throwable("空文件"), getSubscriberID());
                         finish();
                     }
+                    break;
                 default:
                     super.onActivityResult(requestCode, resultCode, data);
                     finish();
