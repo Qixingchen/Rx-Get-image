@@ -76,6 +76,13 @@ public class MainActivity extends AppCompatActivity {
         mBinding.take.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                RxGetImage.getInstance().takeImage(false).subscribe(fileSubscriber);
+            }
+        });
+
+        mBinding.takeAndCorp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 RxGetImage.getInstance().takeImage(true).subscribe(fileSubscriber);
             }
         });

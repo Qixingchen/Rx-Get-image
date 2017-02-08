@@ -145,6 +145,7 @@ public class GetImageActivity extends Activity {
                         } else {
                             RxGetImage.getInstance().onAns(takenFile, getSubscriberID());
                             RxGetImage.getInstance().onComplete(getSubscriberID());
+                            finish();
                         }
                     } else {
                         RxGetImage.getInstance().onError(new Throwable("空文件"), getSubscriberID());
