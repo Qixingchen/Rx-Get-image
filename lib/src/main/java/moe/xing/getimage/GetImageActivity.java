@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.widget.Toast;
@@ -20,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import me.shaohui.advancedluban.Luban;
 import moe.xing.baseutils.Init;
 import moe.xing.baseutils.utils.FileUtils;
 import moe.xing.baseutils.utils.IntentUtils;
@@ -28,6 +30,7 @@ import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 /**
@@ -42,24 +45,64 @@ public class GetImageActivity extends Activity {
     private static final int TAKE_PHOTO = 20;
     private static final int CORP_PHOTO = 30;
     private static final String SUBSCRIBER_ID = "SubscriberID";
-    private static final String SELECT_MODE = "select_mode";
-    private static final String MAX_SIZE = "max_size";
+    //    @Deprecated
+//    private static final String SELECT_MODE = "select_mode";
+    private static final String MAX_ARRAY_SIZE = "MAX_ARRAY_SIZE";
+    private static final String IS_SINGLE = "IS_SINGLE";
+    private static final String IS_TAKE_PHOTO = "IS_TAKE_PHOTO";
+    private static final String NEED_COMPRESS = "NEED_COMPRESS";
+    private static final String NEED_CORP = "NEED_CORP";
+    private static final String MAX_SIZE_IN_KIB = "MAX_SIZE_IN_KIB";
+    private static final String MAX_WIDTH_IN_PX = "MAX_WIDTH_IN_PX";
+    private static final String MAX_HEIGHT_IN_PX = "MAX_HEIGHT_IN_PX";
     private Uri corpedImage;
     @Nullable
     private File takenFile = null;
 
+//    /**
+//     * 获取启动 intent
+//     *
+//     * @param subscriberID subscriberID
+//     * @param selectMode   选择模式(单选/多选)
+//     */
+//    public static Intent getStartIntent(Context context, int subscriberID,
+//                                        @RxGetImage.SelectMode int selectMode,
+//                                        int maxSize) {
+//        Intent intent = new Intent(context, GetImageActivity.class);
+//        intent.putExtra(SUBSCRIBER_ID, subscriberID);
+//        intent.putExtra(SELECT_MODE, selectMode);
+//        intent.putExtra(MAX_ARRAY_SIZE, maxSize);
+//        return intent;
+//    }
+
     /**
      * 获取启动 intent
      *
-     * @param subscriberID subscriberID
-     * @param selectMode   选择模式(单选/多选)
+     * @param context       上下文
+     * @param subscriberID  subscriberID
+     * @param isSingle      是否是单图
+     * @param isTakePhoto   是否是拍摄
+     * @param needCompress  是否需要压缩
+     * @param needCorp      是否需要裁剪
+     * @param maxArraySize  获取的最大图片数量
+     * @param maxSizeInKib  图片压缩后的最大大小(如果选了压缩)
+     * @param maxWidthInPx  图片压缩后的最大宽度(如果选了压缩)
+     * @param maxHeightInPx 图片压缩后的最大高度(如果选了压缩)
      */
-    public static Intent getStartIntent(Context context, int subscriberID, @RxGetImage.SelectMode int selectMode,
-                                        int maxSize) {
+    public static Intent getStartIntent(Context context, int subscriberID, boolean isTakePhoto,
+                                        boolean isSingle, boolean needCompress, boolean needCorp,
+                                        int maxArraySize, int maxSizeInKib,
+                                        int maxWidthInPx, int maxHeightInPx) {
         Intent intent = new Intent(context, GetImageActivity.class);
         intent.putExtra(SUBSCRIBER_ID, subscriberID);
-        intent.putExtra(SELECT_MODE, selectMode);
-        intent.putExtra(MAX_SIZE, maxSize);
+        intent.putExtra(IS_TAKE_PHOTO, isTakePhoto);
+        intent.putExtra(IS_SINGLE, isSingle);
+        intent.putExtra(NEED_COMPRESS, needCompress);
+        intent.putExtra(NEED_CORP, needCorp);
+        intent.putExtra(MAX_ARRAY_SIZE, maxArraySize);
+        intent.putExtra(MAX_SIZE_IN_KIB, maxSizeInKib);
+        intent.putExtra(MAX_WIDTH_IN_PX, maxWidthInPx);
+        intent.putExtra(MAX_HEIGHT_IN_PX, maxHeightInPx);
         return intent;
     }
 
@@ -80,8 +123,8 @@ public class GetImageActivity extends Activity {
      * 选择图片
      */
     private void doGet() {
-        int mode = getIntent().getIntExtra(SELECT_MODE, RxGetImage.MODE_SINGLE);
-        if (mode == RxGetImage.MODE_TAKE_PHOTO || mode == RxGetImage.MODE_TAKE_PHOTO_AND_CORP) {
+
+        if (getIntent().getBooleanExtra(IS_TAKE_PHOTO, false)) {
             doTake();
         } else {
             doSelect();
@@ -91,7 +134,7 @@ public class GetImageActivity extends Activity {
     private void doSelect() {
         Intent photoPickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
         photoPickerIntent.setType("image/*");
-        if (RxGetImage.MODE_MULTIPLE == getIntent().getIntExtra(SELECT_MODE, RxGetImage.MODE_SINGLE)) {
+        if (!getIntent().getBooleanExtra(IS_SINGLE, true)) {
             photoPickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         }
         IntentUtils.startIntentForResult(photoPickerIntent, this, SELECT_PHOTO);
@@ -121,18 +164,16 @@ public class GetImageActivity extends Activity {
         if (resultCode == Activity.RESULT_OK) {
             switch (requestCode) {
                 case SELECT_PHOTO:
-                    if ((RxGetImage.MODE_MULTIPLE == getSelectMode())) {
-                        getMultipleImages(data, getIntent().getIntExtra(MAX_SIZE, 1));
-                    } else {
+                    if (getIntent().getBooleanExtra(IS_SINGLE, true)) {
                         getSingleImage(data.getData());
+                    } else {
+                        getMultipleImages(data, getIntent().getIntExtra(MAX_ARRAY_SIZE, 1));
                     }
                     break;
                 case CORP_PHOTO:
                     if (corpedImage != null) {
                         File corped = new File(URI.create(corpedImage.toString()));
-                        RxGetImage.getInstance().onAns(corped, getSubscriberID());
-                        RxGetImage.getInstance().onComplete(getSubscriberID());
-                        finish();
+                        sendSingleAnsAndFinish(corped);
                     } else {
                         RxGetImage.getInstance().onError(new Throwable("空文件"), getSubscriberID());
                         finish();
@@ -140,12 +181,10 @@ public class GetImageActivity extends Activity {
                     break;
                 case TAKE_PHOTO:
                     if (takenFile != null && takenFile.exists() && takenFile.length() > 0) {
-                        if (RxGetImage.MODE_TAKE_PHOTO_AND_CORP == getSelectMode()) {
+                        if (getIntent().getBooleanExtra(NEED_CORP, false)) {
                             toCorp(takenFile);
                         } else {
-                            RxGetImage.getInstance().onAns(takenFile, getSubscriberID());
-                            RxGetImage.getInstance().onComplete(getSubscriberID());
-                            finish();
+                            sendSingleAnsAndFinish(takenFile);
                         }
                     } else {
                         RxGetImage.getInstance().onError(new Throwable("空文件"), getSubscriberID());
@@ -214,6 +253,19 @@ public class GetImageActivity extends Activity {
                         }
                     };
                 }
+            }).flatMap(new Func1<File, Observable<File>>() {
+                @Override
+                public Observable<File> call(File file) {
+                    if (getIntent().getBooleanExtra(NEED_COMPRESS, true)) {
+                        return Luban.compress(GetImageActivity.this, file)
+                                .setMaxSize(getIntent().getIntExtra(MAX_SIZE_IN_KIB, 150))
+                                .setMaxWidth(getIntent().getIntExtra(MAX_WIDTH_IN_PX, 1920))
+                                .setMaxHeight(getIntent().getIntExtra(MAX_HEIGHT_IN_PX, 1920))
+                                .putGear(Luban.CUSTOM_GEAR).asObservable();
+                    } else {
+                        return Observable.just(file);
+                    }
+                }
             })
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -227,6 +279,7 @@ public class GetImageActivity extends Activity {
                         @Override
                         public void onError(Throwable e) {
                             RxGetImage.getInstance().onError(e, getSubscriberID());
+                            finish();
                         }
 
                         @Override
@@ -261,12 +314,10 @@ public class GetImageActivity extends Activity {
 
                     @Override
                     public void onNext(File s) {
-                        if (RxGetImage.MODE_SINGLE_AND_CORP == getSelectMode()) {
+                        if (getIntent().getBooleanExtra(NEED_CORP, false)) {
                             toCorp(s);
                         } else {
-                            RxGetImage.getInstance().onAns(s, getSubscriberID());
-                            RxGetImage.getInstance().onComplete(getSubscriberID());
-                            finish();
+                            sendSingleAnsAndFinish(s);
                         }
                     }
                 });
@@ -274,12 +325,6 @@ public class GetImageActivity extends Activity {
 
     private int getSubscriberID() {
         return getIntent().getIntExtra(SUBSCRIBER_ID, 0);
-    }
-
-    @RxGetImage.SelectMode
-    private int getSelectMode() {
-        //noinspection WrongConstant
-        return getIntent().getIntExtra(SELECT_MODE, RxGetImage.MODE_SINGLE);
     }
 
     /**
@@ -307,5 +352,37 @@ public class GetImageActivity extends Activity {
         takenFile = image;
 
         return image;
+    }
+
+    private void sendSingleAnsAndFinish(@NonNull File image) {
+        if (getIntent().getBooleanExtra(NEED_COMPRESS, true)) {
+            Luban.compress(this, image)
+                    .setMaxSize(getIntent().getIntExtra(MAX_SIZE_IN_KIB, 150))
+                    .setMaxWidth(getIntent().getIntExtra(MAX_WIDTH_IN_PX, 1920))
+                    .setMaxHeight(getIntent().getIntExtra(MAX_HEIGHT_IN_PX, 1920))
+                    .putGear(Luban.CUSTOM_GEAR).asObservable()
+                    .subscribe(new Subscriber<File>() {
+                        @Override
+                        public void onCompleted() {
+                            RxGetImage.getInstance().onComplete(getSubscriberID());
+                            finish();
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            RxGetImage.getInstance().onError(e, getSubscriberID());
+                            finish();
+                        }
+
+                        @Override
+                        public void onNext(File file) {
+                            RxGetImage.getInstance().onAns(file, getSubscriberID());
+                        }
+                    });
+        } else {
+            RxGetImage.getInstance().onAns(image, getSubscriberID());
+            RxGetImage.getInstance().onComplete(getSubscriberID());
+            finish();
+        }
     }
 }

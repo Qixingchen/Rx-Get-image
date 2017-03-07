@@ -5,7 +5,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 18
+        minSdkVersion 19
         targetSdkVersion rootProject.ext.sdk_version
         versionCode 1
         versionName "1.0"

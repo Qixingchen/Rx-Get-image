@@ -12,7 +12,7 @@ Rx-Get-image
 ### how to use
 
 ``` java
-    RxGetImage.getInstance().getImage()
+    RxGetImage.newBuilder().needCorp(true).isSingle(true).build()
     .subscribe(new Subscriber<File>() {
         @Override
         public void onCompleted() {
@@ -31,4 +31,16 @@ Rx-Get-image
     });
 ```
 
+default config:
+``` java
+            needCorp = false;
+            needCompress = true;
+            isSingle = true;
+            isTakePhoto = false;
+
+            maxArraySize = Integer.MAX_VALUE;
+            maxSizeInKib = 150;
+            maxWidthInPx = 1920;
+            maxHeightInPx = 1920;
+```
 read javadoc in [jitpack](https://jitpack.io/com/github/Qixingchen/Rx-Get-image/-SNAPSHOT/javadoc/)

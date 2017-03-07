@@ -39,12 +39,13 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onError(Throwable e) {
-                Toast.makeText(MainActivity.this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "error:" + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onNext(File file) {
                 mAdapter.addData(file);
+                Toast.makeText(MainActivity.this, "image add", Toast.LENGTH_SHORT).show();
             }
         };
 
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         mBinding.singleCorp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                RxGetImage.getInstance().getImage(true).subscribe(fileSubscriber);
+                RxGetImage.newBuilder().needCorp(true).isSingle(true).build().subscribe(fileSubscriber);
 
             }
         });
@@ -60,30 +61,28 @@ public class MainActivity extends AppCompatActivity {
         mBinding.single.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                RxGetImage.getInstance().getImage(false).subscribe(fileSubscriber);
-
+                RxGetImage.newBuilder().needCorp(false).isSingle(true).build().subscribe(fileSubscriber);
             }
         });
 
         mBinding.multiple.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                RxGetImage.getInstance().getMultipleImage(Integer.MAX_VALUE).subscribe(fileSubscriber);
-
+                RxGetImage.newBuilder().isSingle(false).build().subscribe(fileSubscriber);
             }
         });
 
         mBinding.take.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RxGetImage.getInstance().takeImage(false).subscribe(fileSubscriber);
+                RxGetImage.newBuilder().isTakePhoto(true).needCorp(false).build().subscribe(fileSubscriber);
             }
         });
 
         mBinding.takeAndCorp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RxGetImage.getInstance().takeImage(true).subscribe(fileSubscriber);
+                RxGetImage.newBuilder().isTakePhoto(true).needCorp(true).build().subscribe(fileSubscriber);
             }
         });
 

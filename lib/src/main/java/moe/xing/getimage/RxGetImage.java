@@ -47,30 +47,19 @@ public class RxGetImage {
         return sSingleton;
     }
 
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
     /**
      * 获取图片
      *
      * @return Observable<File>
      */
     @NonNull
+    @Deprecated
     public Observable<File> getImage(final boolean needCorp) {
-        return Observable.create(new Observable.OnSubscribe<File>() {
-            @Override
-            public void call(Subscriber<? super File> subscriber) {
-                synchronized (RxGetImage.class) {
-                    int i = 1;
-                    while (mSubscribers.get(i) != null) {
-                        i++;
-                    }
-
-                    Intent intent = GetImageActivity.getStartIntent(Init.getApplication(), i,
-                            needCorp ? MODE_SINGLE_AND_CORP : MODE_SINGLE, 1);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    Init.getApplication().startActivity(intent);
-                    mSubscribers.append(i, subscriber);
-                }
-            }
-        });
+        return new Builder().isSingle(true).needCorp(needCorp).build();
     }
 
     /**
@@ -80,22 +69,9 @@ public class RxGetImage {
      * @return Observable<File>
      */
     @NonNull
+    @Deprecated
     public Observable<File> getMultipleImage(final int maxSize) {
-        return Observable.create(new Observable.OnSubscribe<File>() {
-            @Override
-            public void call(Subscriber<? super File> subscriber) {
-                synchronized (RxGetImage.class) {
-                    int i = 1;
-                    while (mSubscribers.get(i) != null) {
-                        i++;
-                    }
-                    Intent intent = GetImageActivity.getStartIntent(Init.getApplication(), i, MODE_MULTIPLE, maxSize);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    Init.getApplication().startActivity(intent);
-                    mSubscribers.append(i, subscriber);
-                }
-            }
-        });
+        return new Builder().isTakePhoto(false).isSingle(false).maxArraySize(maxSize).build();
     }
 
     /**
@@ -104,23 +80,9 @@ public class RxGetImage {
      * @return Observable<File>
      */
     @NonNull
+    @Deprecated
     public Observable<File> takeImage(final boolean needCorp) {
-        return Observable.create(new Observable.OnSubscribe<File>() {
-            @Override
-            public void call(Subscriber<? super File> subscriber) {
-                synchronized (RxGetImage.class) {
-                    int i = 1;
-                    while (mSubscribers.get(i) != null) {
-                        i++;
-                    }
-                    Intent intent = GetImageActivity.getStartIntent(Init.getApplication(), i,
-                            needCorp ? MODE_TAKE_PHOTO_AND_CORP : MODE_TAKE_PHOTO, 1);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    Init.getApplication().startActivity(intent);
-                    mSubscribers.append(i, subscriber);
-                }
-            }
-        });
+        return new Builder().isTakePhoto(true).needCorp(needCorp).build();
     }
 
     /**
@@ -154,7 +116,118 @@ public class RxGetImage {
         }
     }
 
+    private Observable<File> fromBuild(final Builder builder) {
+        return Observable.create(new Observable.OnSubscribe<File>() {
+            @Override
+            public void call(Subscriber<? super File> subscriber) {
+                synchronized (RxGetImage.class) {
+                    //get Subscribers ID
+                    int i = 1;
+                    while (mSubscribers.get(i) != null) {
+                        i++;
+                    }
+                    //add intent
+                    Intent intent = GetImageActivity.getStartIntent(Init.getApplication(), i,
+                            builder.isTakePhoto, builder.isSingle,
+                            builder.needCompress, builder.needCorp,
+                            builder.maxArraySize, builder.maxSizeInKib,
+                            builder.maxWidthInPx, builder.maxHeightInPx
+                    );
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    Init.getApplication().startActivity(intent);
+                    mSubscribers.append(i, subscriber);
+                }
+            }
+        });
+    }
+
     @IntDef({MODE_SINGLE, MODE_MULTIPLE, MODE_SINGLE_AND_CORP, MODE_TAKE_PHOTO, MODE_TAKE_PHOTO_AND_CORP})
+    @Deprecated
     public @interface SelectMode {
     }
+
+    public static final class Builder {
+        private boolean needCorp;
+        private boolean needCompress;
+        private boolean isSingle;
+        private boolean isTakePhoto;
+        private int maxArraySize;
+        private int maxSizeInKib;
+        private int maxWidthInPx;
+        private int maxHeightInPx;
+
+        public Builder() {
+            needCorp = false;
+            needCompress = true;
+            isSingle = true;
+            isTakePhoto = false;
+
+            maxArraySize = Integer.MAX_VALUE;
+            maxSizeInKib = 150;
+            maxWidthInPx = 1920;
+            maxHeightInPx = 1920;
+        }
+
+        @NonNull
+        public Builder needCorp(boolean val) {
+            needCorp = val;
+            return this;
+        }
+
+        @NonNull
+        public Builder needCompress(boolean val) {
+            needCompress = val;
+            return this;
+        }
+
+        @NonNull
+        public Builder isSingle(boolean val) {
+            isSingle = val;
+            return this;
+        }
+
+        @NonNull
+        public Builder isTakePhoto(boolean val) {
+            isTakePhoto = val;
+            return this;
+        }
+
+        @NonNull
+        public Builder maxArraySize(int val) {
+            maxArraySize = val;
+            return this;
+        }
+
+        @NonNull
+        public Builder maxSizeInKib(int val) {
+            maxSizeInKib = val;
+            return this;
+        }
+
+        @NonNull
+        public Builder maxWidthInPx(int val) {
+            maxWidthInPx = val;
+            return this;
+        }
+
+        @NonNull
+        public Builder maxHeightInPx(int val) {
+            maxHeightInPx = val;
+            return this;
+        }
+
+        @NonNull
+        public Builder maxSideInPx(int val) {
+            maxHeightInPx = val;
+            maxWidthInPx = val;
+            return this;
+        }
+
+        @NonNull
+        public Observable<File> build() {
+            return RxGetImage.getInstance().fromBuild(this);
+        }
+    }
+
+
 }
