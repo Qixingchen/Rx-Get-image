@@ -1,6 +1,7 @@
 package moe.xing.getimage;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +11,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.soundcloud.android.crop.Crop;
@@ -206,6 +208,15 @@ public class GetImageActivity extends Activity {
      */
     private void getMultipleImages(Intent data, int max) {
         final ClipData clipData = data.getClipData();
+        final ProgressDialog mDialog = new ProgressDialog(this, R.style.AppTheme_Dialog_Light);
+        WindowManager.LayoutParams params = mDialog.getWindow()
+                .getAttributes();
+        params.dimAmount = 0f;
+        mDialog.getWindow().setAttributes(params);
+        mDialog.setTitle("正在获取图片");
+        mDialog.setCancelable(false);
+        mDialog.show();
+
         if (clipData != null) {
             int size = data.getClipData().getItemCount();
             if (size > max) {
@@ -273,12 +284,14 @@ public class GetImageActivity extends Activity {
                         @Override
                         public void onCompleted() {
                             RxGetImage.getInstance().onComplete(getSubscriberID());
+                            mDialog.dismiss();
                             finish();
                         }
 
                         @Override
                         public void onError(Throwable e) {
                             RxGetImage.getInstance().onError(e, getSubscriberID());
+                            mDialog.dismiss();
                             finish();
                         }
 
