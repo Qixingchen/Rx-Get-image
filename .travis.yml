@@ -35,7 +35,9 @@ script:
 #  - ./gradlew createDebugCoverageReport coveralls
 #  - ./gradlew connectedAndroidTest coveralls
   
-  
+notifications:
+  slack: saicheng-team:8X56hkcIDcoanC5B2sNxPHdZ
+
 jdk:
  - oraclejdk8
 
