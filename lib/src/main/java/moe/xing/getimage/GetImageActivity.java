@@ -6,11 +6,12 @@ import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.content.FileProvider;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -35,12 +36,15 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
+import static android.support.v4.content.FileProvider.getUriForFile;
+
 /**
  * Created by hehanbo on 16-9-29.
  * <p>
  * 获取图像
  */
 
+@SuppressWarnings("UnusedReturnValue")
 public class GetImageActivity extends Activity {
 
     private static final int SELECT_PHOTO = 10;
@@ -152,10 +156,18 @@ public class GetImageActivity extends Activity {
             return;
         }
         if (takenFile != null) {
-            Uri photoURI = FileProvider.getUriForFile(this,
-                    Init.getApplication().getPackageName() + ".fileProvider",
-                    takenFile);
-            takeIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Uri contentUri = getUriForFile(GetImageActivity.this, Init.getApplication().getPackageName() + ".fileprovider", takenFile);
+
+                takeIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                takeIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+                        contentUri);
+            } else {
+                takeIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+                        Uri.fromFile(takenFile));
+            }
+
             IntentUtils.startIntentForResult(takeIntent, this, TAKE_PHOTO);
         }
 
@@ -209,8 +221,12 @@ public class GetImageActivity extends Activity {
     private void getMultipleImages(Intent data, int max) {
         final ClipData clipData = data.getClipData();
         final ProgressDialog mDialog = new ProgressDialog(this, R.style.AppTheme_Dialog_Light);
-        WindowManager.LayoutParams params = mDialog.getWindow()
-                .getAttributes();
+        Window window = mDialog.getWindow();
+        if (window == null) {
+            Toast.makeText(this, "发生意外错误" + "dialog window is NULL", Toast.LENGTH_LONG).show();
+            return;
+        }
+        WindowManager.LayoutParams params = window.getAttributes();
         params.dimAmount = 0f;
         mDialog.getWindow().setAttributes(params);
         mDialog.setTitle("正在获取图片");
@@ -218,12 +234,13 @@ public class GetImageActivity extends Activity {
         mDialog.show();
 
         if (clipData != null) {
-            int size = data.getClipData().getItemCount();
+            int size = clipData.getItemCount();
             if (size > max) {
                 Toast.makeText(this, String.format(Locale.getDefault(), "选择数量超过%d张,%d张未保存",
                         max, size - max), Toast.LENGTH_LONG).show();
             }
             final int finalSize = Math.min(size, max);
+            //noinspection deprecation
             Observable.create(new Observable.OnSubscribe<Uri>() {
                 @Override
                 public void call(Subscriber<? super Uri> subscriber) {
@@ -359,9 +376,9 @@ public class GetImageActivity extends Activity {
 
     private File takenPhotoFile() throws IOException {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
+        String imageFileName = "JPEG_" + timeStamp + ".jpg";
 
-        File image = FileUtils.getCacheFile(timeStamp);
+        File image = FileUtils.getCacheFile(imageFileName);
         takenFile = image;
 
         return image;
