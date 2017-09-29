@@ -30,7 +30,7 @@ public class RxGetImage {
     /**
      * 获取单例
      */
-    private static RxGetImage getInstance() {
+    protected static RxGetImage getInstance() {
         if (sSingleton == null) {
             synchronized (RxGetImage.class) {
                 if (sSingleton == null) {
