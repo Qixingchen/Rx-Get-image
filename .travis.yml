@@ -9,7 +9,6 @@ android:
 
     # The SDK version used to compile your project
     - android-25
-    - android-24
 
     # Additional components
     - extra-google-m2repository
@@ -30,7 +29,7 @@ android:
 script:
   - ./gradlew :lib:assembleDebug
   - ./gradlew :lib:assembleRelease
-  - ./gradlew :lib:jacocoTestReportDebug coveralls
+#  - ./gradlew :lib:jacocoTestReportDebug coveralls
 #  - ./gradlew testDebugUnitTest
 #  - ./gradlew createDebugCoverageReport coveralls
 #  - ./gradlew connectedAndroidTest coveralls
