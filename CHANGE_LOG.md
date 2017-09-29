@@ -1,3 +1,8 @@
+### V1.5.0
+add exif support library  
+fix rotation   
+remove Deprecated method  
+
 ### V1.4.3
 fix taken photo crash
 
