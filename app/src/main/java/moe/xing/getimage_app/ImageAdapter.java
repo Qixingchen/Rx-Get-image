@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 
 import java.io.File;
 
@@ -15,6 +16,8 @@ import moe.xing.rvutils.BaseRecyclerViewAdapter;
 
 /**
  * Created by Qi Xingchen on 16-11-30.
+ * <p>
+ * 图片列表
  */
 
 class ImageAdapter extends BaseRecyclerViewAdapter<File, ImageAdapter.ViewHolder> {
@@ -31,7 +34,9 @@ class ImageAdapter extends BaseRecyclerViewAdapter<File, ImageAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        Glide.with(holder.itemView.getContext()).load(datas.get(position)).centerCrop().into(holder.mBinding.image);
+        Glide.with(holder.itemView.getContext()).load(datas.get(position))
+                .apply(new RequestOptions().centerCrop())
+                .into(holder.mBinding.image);
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {

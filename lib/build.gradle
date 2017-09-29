@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: 'com.github.kt3k.coveralls'
-apply plugin: 'jacoco'
+//apply plugin: 'com.github.kt3k.coveralls'
+//apply plugin: 'jacoco'
 
 android {
     compileSdkVersion rootProject.ext.sdk_version
@@ -19,9 +19,9 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        debug {
-            testCoverageEnabled true
-        }
+//        debug {
+//            testCoverageEnabled true
+//        }
         lintOptions {
             abortOnError false
         }
@@ -37,6 +37,7 @@ dependencies {
 
     compile "com.github.Qixingchen:Rx-Utils:V1.2.6"
     compile "com.android.support:appcompat-v7:$supportLibraryVersion"
+    compile "com.android.support:exifinterface:$supportLibraryVersion"
     //corp
     compile 'com.soundcloud.android:android-crop:1.0.1@aar'
     //luban 压缩
@@ -72,11 +73,11 @@ artifacts {
     archives javadocJar
 }
 
-coveralls {
-    jacocoReportPath = "${buildDir}/reports/jacoco/debug/jacoco.xml"
-}
-
-tasks.coveralls {
-    dependsOn 'assembleDebugUnitTest'
-    onlyIf { System.env.'CI' }
-}
+//coveralls {
+//    jacocoReportPath = "${buildDir}/reports/jacoco/debug/jacoco.xml"
+//}
+//
+//tasks.coveralls {
+//    dependsOn 'assembleDebugUnitTest'
+//    onlyIf { System.env.'CI' }
+//}

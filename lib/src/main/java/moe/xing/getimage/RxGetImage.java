@@ -1,7 +1,6 @@
 package moe.xing.getimage;
 
 import android.content.Intent;
-import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
@@ -21,11 +20,6 @@ import rx.Subscriber;
 @SuppressWarnings("WeakerAccess")
 public class RxGetImage {
 
-    public static final int MODE_SINGLE = 1;
-    public static final int MODE_SINGLE_AND_CORP = 2;
-    public static final int MODE_MULTIPLE = 3;
-    public static final int MODE_TAKE_PHOTO = 4;
-    public static final int MODE_TAKE_PHOTO_AND_CORP = 5;
     private static RxGetImage sSingleton;
     private SparseArray<Subscriber<? super File>> mSubscribers = new SparseArray<>();
 
@@ -49,40 +43,6 @@ public class RxGetImage {
 
     public static Builder newBuilder() {
         return new Builder();
-    }
-
-    /**
-     * 获取图片
-     *
-     * @return Observable<File>
-     */
-    @NonNull
-    @Deprecated
-    public Observable<File> getImage(final boolean needCorp) {
-        return new Builder().isSingle(true).needCorp(needCorp).build();
-    }
-
-    /**
-     * 获取多张图片
-     *
-     * @param maxSize 最大数量
-     * @return Observable<File>
-     */
-    @NonNull
-    @Deprecated
-    public Observable<File> getMultipleImage(final int maxSize) {
-        return new Builder().isTakePhoto(false).isSingle(false).maxArraySize(maxSize).build();
-    }
-
-    /**
-     * 拍摄图片
-     *
-     * @return Observable<File>
-     */
-    @NonNull
-    @Deprecated
-    public Observable<File> takeImage(final boolean needCorp) {
-        return new Builder().isTakePhoto(true).needCorp(needCorp).build();
     }
 
     /**
@@ -141,11 +101,7 @@ public class RxGetImage {
         });
     }
 
-    @IntDef({MODE_SINGLE, MODE_MULTIPLE, MODE_SINGLE_AND_CORP, MODE_TAKE_PHOTO, MODE_TAKE_PHOTO_AND_CORP})
-    @Deprecated
-    public @interface SelectMode {
-    }
-
+    @SuppressWarnings("SameParameterValue")
     public static final class Builder {
         private boolean needCorp;
         private boolean needCompress;

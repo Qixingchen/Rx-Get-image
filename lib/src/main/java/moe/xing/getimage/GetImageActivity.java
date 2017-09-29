@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.media.ExifInterface;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -51,8 +52,6 @@ public class GetImageActivity extends Activity {
     private static final int TAKE_PHOTO = 20;
     private static final int CORP_PHOTO = 30;
     private static final String SUBSCRIBER_ID = "SubscriberID";
-    //    @Deprecated
-//    private static final String SELECT_MODE = "select_mode";
     private static final String MAX_ARRAY_SIZE = "MAX_ARRAY_SIZE";
     private static final String IS_SINGLE = "IS_SINGLE";
     private static final String IS_TAKE_PHOTO = "IS_TAKE_PHOTO";
@@ -65,21 +64,6 @@ public class GetImageActivity extends Activity {
     @Nullable
     private File takenFile = null;
 
-//    /**
-//     * 获取启动 intent
-//     *
-//     * @param subscriberID subscriberID
-//     * @param selectMode   选择模式(单选/多选)
-//     */
-//    public static Intent getStartIntent(Context context, int subscriberID,
-//                                        @RxGetImage.SelectMode int selectMode,
-//                                        int maxSize) {
-//        Intent intent = new Intent(context, GetImageActivity.class);
-//        intent.putExtra(SUBSCRIBER_ID, subscriberID);
-//        intent.putExtra(SELECT_MODE, selectMode);
-//        intent.putExtra(MAX_ARRAY_SIZE, maxSize);
-//        return intent;
-//    }
 
     /**
      * 获取启动 intent
@@ -283,13 +267,20 @@ public class GetImageActivity extends Activity {
                 }
             }).flatMap(new Func1<File, Observable<File>>() {
                 @Override
-                public Observable<File> call(File file) {
+                public Observable<File> call(final File file) {
                     if (getIntent().getBooleanExtra(NEED_COMPRESS, true)) {
                         return Luban.compress(GetImageActivity.this, file)
                                 .setMaxSize(getIntent().getIntExtra(MAX_SIZE_IN_KIB, 150))
                                 .setMaxWidth(getIntent().getIntExtra(MAX_WIDTH_IN_PX, 1920))
                                 .setMaxHeight(getIntent().getIntExtra(MAX_HEIGHT_IN_PX, 1920))
-                                .putGear(Luban.CUSTOM_GEAR).asObservable();
+                                .putGear(Luban.CUSTOM_GEAR).asObservable()
+                                .map(new Func1<File, File>() {
+                                    @Override
+                                    public File call(File out) {
+                                        copyExif(file, out);
+                                        return out;
+                                    }
+                                });
                     } else {
                         return Observable.just(file);
                     }
@@ -384,7 +375,7 @@ public class GetImageActivity extends Activity {
         return image;
     }
 
-    private void sendSingleAnsAndFinish(@NonNull File image) {
+    private void sendSingleAnsAndFinish(@NonNull final File image) {
         if (getIntent().getBooleanExtra(NEED_COMPRESS, true)) {
             Luban.compress(this, image)
                     .setMaxSize(getIntent().getIntExtra(MAX_SIZE_IN_KIB, 150))
@@ -406,6 +397,7 @@ public class GetImageActivity extends Activity {
 
                         @Override
                         public void onNext(File file) {
+                            copyExif(image, file);
                             RxGetImage.getInstance().onAns(file, getSubscriberID());
                         }
                     });
@@ -413,6 +405,30 @@ public class GetImageActivity extends Activity {
             RxGetImage.getInstance().onAns(image, getSubscriberID());
             RxGetImage.getInstance().onComplete(getSubscriberID());
             finish();
+        }
+    }
+
+    /**
+     * 复写 exif 信息
+     *
+     * @param origin 原始文件
+     * @param after  新增文件
+     */
+    private void copyExif(@NonNull File origin, @NonNull File after) {
+
+        try {
+            ExifInterface originExif = new ExifInterface(origin.getAbsolutePath());
+            ExifInterface afterExif = new ExifInterface(after.getAbsolutePath());
+            afterExif.setAttribute(ExifInterface.TAG_ORIENTATION,
+                    String.valueOf(originExif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                            ExifInterface.ORIENTATION_NORMAL)));
+            double[] latLong = originExif.getLatLong();
+            if (latLong != null && latLong.length >= 2) {
+                afterExif.setLatLong(latLong[0], latLong[1]);
+            }
+            afterExif.saveAttributes();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
