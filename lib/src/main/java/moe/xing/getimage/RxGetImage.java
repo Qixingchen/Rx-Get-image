@@ -20,10 +20,25 @@ import rx.Subscriber;
 @SuppressWarnings("WeakerAccess")
 public class RxGetImage {
 
+    private static RxGetImage sSingleton;
     private SparseArray<Subscriber<? super File>> mSubscribers = new SparseArray<>();
 
     public RxGetImage() {
 
+    }
+
+    /**
+     * 获取单例
+     */
+    private static RxGetImage getInstance() {
+        if (sSingleton == null) {
+            synchronized (RxGetImage.class) {
+                if (sSingleton == null) {
+                    sSingleton = new RxGetImage();
+                }
+            }
+        }
+        return sSingleton;
     }
 
     public static Builder newBuilder() {
