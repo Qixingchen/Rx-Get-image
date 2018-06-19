@@ -60,6 +60,8 @@ public class GetImageActivity extends Activity {
     private static final String MAX_SIZE_IN_KIB = "MAX_SIZE_IN_KIB";
     private static final String MAX_WIDTH_IN_PX = "MAX_WIDTH_IN_PX";
     private static final String MAX_HEIGHT_IN_PX = "MAX_HEIGHT_IN_PX";
+    private static final String CORP_WIDTH = "CORP_WIDTH";
+    private static final String CORP_HEIGHT = "CORP_HEIGHT";
     private Uri corpedImage;
     @Nullable
     private File takenFile = null;
@@ -82,7 +84,8 @@ public class GetImageActivity extends Activity {
     public static Intent getStartIntent(Context context, int subscriberID, boolean isTakePhoto,
                                         boolean isSingle, boolean needCompress, boolean needCorp,
                                         int maxArraySize, int maxSizeInKib,
-                                        int maxWidthInPx, int maxHeightInPx) {
+                                        int maxWidthInPx, int maxHeightInPx,
+                                        int corpWidth, int corpHeight) {
         Intent intent = new Intent(context, GetImageActivity.class);
         intent.putExtra(SUBSCRIBER_ID, subscriberID);
         intent.putExtra(IS_TAKE_PHOTO, isTakePhoto);
@@ -93,6 +96,8 @@ public class GetImageActivity extends Activity {
         intent.putExtra(MAX_SIZE_IN_KIB, maxSizeInKib);
         intent.putExtra(MAX_WIDTH_IN_PX, maxWidthInPx);
         intent.putExtra(MAX_HEIGHT_IN_PX, maxHeightInPx);
+        intent.putExtra(CORP_WIDTH, corpWidth);
+        intent.putExtra(CORP_HEIGHT, corpHeight);
         return intent;
     }
 
@@ -281,6 +286,7 @@ public class GetImageActivity extends Activity {
                                         return out;
                                     }
                                 });
+
                     } else {
                         return Observable.just(file);
                     }
@@ -356,7 +362,8 @@ public class GetImageActivity extends Activity {
         try {
             ans = FileUtils.getCacheFile("corp-" + image.getName());
             Crop.of(Uri.fromFile(image), Uri.fromFile(ans))
-                    .withAspect(1, 1).start(this, CORP_PHOTO);
+                    .withAspect(getIntent().getIntExtra(CORP_WIDTH, 1), getIntent().getIntExtra(CORP_HEIGHT, 1))
+                    .start(this, CORP_PHOTO);
             corpedImage = Uri.fromFile(ans);
             return;
         } catch (IOException e) {

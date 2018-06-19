@@ -91,7 +91,8 @@ public class RxGetImage {
                             builder.isTakePhoto, builder.isSingle,
                             builder.needCompress, builder.needCorp,
                             builder.maxArraySize, builder.maxSizeInKib,
-                            builder.maxWidthInPx, builder.maxHeightInPx
+                            builder.maxWidthInPx, builder.maxHeightInPx,
+                            builder.corpWidth, builder.corpHeight
                     );
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     Init.getApplication().startActivity(intent);
@@ -111,6 +112,8 @@ public class RxGetImage {
         private int maxSizeInKib;
         private int maxWidthInPx;
         private int maxHeightInPx;
+        private int corpWidth;
+        private int corpHeight;
 
         public Builder() {
             needCorp = false;
@@ -119,9 +122,11 @@ public class RxGetImage {
             isTakePhoto = false;
 
             maxArraySize = Integer.MAX_VALUE;
-            maxSizeInKib = 150;
+            maxSizeInKib = 200;
             maxWidthInPx = 1920;
             maxHeightInPx = 1920;
+            corpHeight = 1;
+            corpWidth = 1;
         }
 
         @NonNull
@@ -176,6 +181,18 @@ public class RxGetImage {
         public Builder maxSideInPx(int val) {
             maxHeightInPx = val;
             maxWidthInPx = val;
+            return this;
+        }
+
+        @NonNull
+        public Builder corpWidth(int val) {
+            corpWidth = val;
+            return this;
+        }
+
+        @NonNull
+        public Builder corpHeight(int val) {
+            corpHeight = val;
             return this;
         }
 

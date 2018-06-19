@@ -5,7 +5,6 @@ apply plugin: 'com.github.dcendents.android-maven'
 
 android {
     compileSdkVersion rootProject.ext.sdk_version
-    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
         minSdkVersion 19
@@ -24,6 +23,17 @@ android {
 //        }
         lintOptions {
             abortOnError false
+        }
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            eachDependency { details ->
+                // Force all of the primary support libraries to use the same version.
+                if (details.requested.group == 'com.android.support' && details.requested.name != 'multidex') {
+                    details.useVersion supportLibraryVersion
+                }
+            }
         }
     }
 }

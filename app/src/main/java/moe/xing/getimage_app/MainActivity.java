@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         mBinding.singleCorp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                RxGetImage.newBuilder().needCorp(true).isSingle(true).build().subscribe(fileSubscriber);
+                RxGetImage.newBuilder().needCorp(true).isSingle(true).corpWidth(2).corpHeight(1).build().subscribe(fileSubscriber);
 
             }
         });
@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
         mBinding.takeAndCorp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RxGetImage.newBuilder().isTakePhoto(true).needCorp(true).build().subscribe(fileSubscriber);
+                RxGetImage.newBuilder().isTakePhoto(true).needCorp(true).corpWidth(2).corpHeight(1).build().subscribe(fileSubscriber);
             }
         });
 

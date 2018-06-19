@@ -1,3 +1,6 @@
+### V1.6.0
+support corp ratio
+
 ### V1.5.0
 add exif support library  
 fix rotation   
