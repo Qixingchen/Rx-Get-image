@@ -429,10 +429,6 @@ public class GetImageActivity extends Activity {
             afterExif.setAttribute(ExifInterface.TAG_ORIENTATION,
                     String.valueOf(originExif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
                             ExifInterface.ORIENTATION_NORMAL)));
-            double[] latLong = originExif.getLatLong();
-            if (latLong != null && latLong.length >= 2) {
-                afterExif.setLatLong(latLong[0], latLong[1]);
-            }
             afterExif.saveAttributes();
         } catch (IOException e) {
             e.printStackTrace();
