@@ -389,8 +389,16 @@ public class GetImageActivity extends Activity {
 
     private void sendSingleAnsAndFinish(@NonNull final File image) {
         if (getIntent().getBooleanExtra(NEED_COMPRESS, true)) {
+            //小于1.5倍压缩目标的不压缩
+            if (image.length() <= getIntent().getIntExtra(MAX_SIZE_IN_KIB, 700) * 1024 * 1.5) {
+                RxGetImage.getInstance().onAns(image, getSubscriberID());
+                RxGetImage.getInstance().onComplete(getSubscriberID());
+                finish();
+                return;
+            }
+
             Luban.compress(this, image)
-                    .setMaxSize(getIntent().getIntExtra(MAX_SIZE_IN_KIB, 150))
+                    .setMaxSize(getIntent().getIntExtra(MAX_SIZE_IN_KIB, 700))
                     .setMaxWidth(getIntent().getIntExtra(MAX_WIDTH_IN_PX, 1920))
                     .setMaxHeight(getIntent().getIntExtra(MAX_HEIGHT_IN_PX, 1920))
                     .putGear(Luban.CUSTOM_GEAR).asObservable()
