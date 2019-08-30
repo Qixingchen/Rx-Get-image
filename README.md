@@ -39,7 +39,7 @@ default config:
             isTakePhoto = false;
 
             maxArraySize = Integer.MAX_VALUE;
-            maxSizeInKib = 150;
+            maxSizeInKib = 700;
             maxWidthInPx = 1920;
             maxHeightInPx = 1920;
             corpHeight = 1;
