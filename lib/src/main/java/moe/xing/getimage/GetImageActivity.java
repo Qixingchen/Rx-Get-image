@@ -366,7 +366,7 @@ public class GetImageActivity extends Activity {
     private void toCorp(File image) {
         File ans;
         try {
-            ans = FileUtils.getCacheFile("corp-" + image.getName());
+            ans = FileUtils.getCacheFile("corp-" + System.currentTimeMillis() + "-" + image.getName());
             UCrop.of(Uri.fromFile(image), Uri.fromFile(ans))
                     .withAspectRatio(getIntent().getIntExtra(CORP_WIDTH, 1), getIntent().getIntExtra(CORP_HEIGHT, 1))
                     .start(this);
