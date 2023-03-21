@@ -38,7 +38,7 @@ notifications:
   slack: saicheng-team:8X56hkcIDcoanC5B2sNxPHdZ
 
 jdk:
- - oraclejdk8
+ - openjdk11
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
