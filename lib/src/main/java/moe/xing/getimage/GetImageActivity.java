@@ -176,7 +176,7 @@ public class GetImageActivity extends Activity {
                     break;
                 case CORP_PHOTO:
                     if (corpedImage != null) {
-                        File corped = new File(URI.create(corpedImage.toString()));
+                        File corped = new File(URI.create(UCrop.getOutput(data).toString()));
                         sendSingleAnsAndFinish(corped);
                     } else {
                         RxGetImage.getInstance().onError(new Throwable("空文件"), getSubscriberID());

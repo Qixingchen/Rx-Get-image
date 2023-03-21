@@ -36,7 +36,7 @@ class ImageAdapter extends BaseRecyclerViewAdapter<File, ImageAdapter.ViewHolder
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         Glide.with(holder.itemView.getContext()).load(datas.get(position))
-                .apply(new RequestOptions().centerCrop())
+                .apply(new RequestOptions().centerInside())
                 .into(holder.mBinding.image);
     }
 
