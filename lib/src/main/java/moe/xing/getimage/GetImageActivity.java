@@ -9,14 +9,11 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.media.ExifInterface;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import com.soundcloud.android.crop.Crop;
+import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +34,11 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-import static android.support.v4.content.FileProvider.getUriForFile;
+import static androidx.core.content.FileProvider.getUriForFile;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.exifinterface.media.ExifInterface;
 
 /**
  * Created by hehanbo on 16-9-29.
@@ -50,7 +51,7 @@ public class GetImageActivity extends Activity {
 
     private static final int SELECT_PHOTO = 10;
     private static final int TAKE_PHOTO = 20;
-    private static final int CORP_PHOTO = 30;
+    private static final int CORP_PHOTO = UCrop.REQUEST_CROP;
     private static final String SUBSCRIBER_ID = "SubscriberID";
     private static final String MAX_ARRAY_SIZE = "MAX_ARRAY_SIZE";
     private static final String IS_SINGLE = "IS_SINGLE";
@@ -231,72 +232,72 @@ public class GetImageActivity extends Activity {
             final int finalSize = Math.min(size, max);
             //noinspection deprecation
             Observable.create(new Observable.OnSubscribe<Uri>() {
-                @Override
-                public void call(Subscriber<? super Uri> subscriber) {
-                    for (int i = 0; i < finalSize; i++) {
-                        subscriber.onNext(clipData.getItemAt(i).getUri());
-                    }
-                    subscriber.onCompleted();
-                }
-            }).lift(new Observable.Operator<File, Uri>() {
-                @Override
-                public Subscriber<? super Uri> call(final Subscriber<? super File> subscriber) {
-
-                    return new Subscriber<Uri>() {
                         @Override
-                        public void onCompleted() {
+                        public void call(Subscriber<? super Uri> subscriber) {
+                            for (int i = 0; i < finalSize; i++) {
+                                subscriber.onNext(clipData.getItemAt(i).getUri());
+                            }
                             subscriber.onCompleted();
                         }
-
+                    }).lift(new Observable.Operator<File, Uri>() {
                         @Override
-                        public void onError(Throwable e) {
-                            subscriber.onError(e);
-                        }
+                        public Subscriber<? super Uri> call(final Subscriber<? super File> subscriber) {
 
+                            return new Subscriber<Uri>() {
+                                @Override
+                                public void onCompleted() {
+                                    subscriber.onCompleted();
+                                }
+
+                                @Override
+                                public void onError(Throwable e) {
+                                    subscriber.onError(e);
+                                }
+
+                                @Override
+                                public void onNext(Uri uri) {
+                                    RxFileUtils.getFileUrlWithAuthority(Init.getApplication(), uri)
+                                            .subscribe(new Action1<File>() {
+                                                @Override
+                                                public void call(File file) {
+                                                    subscriber.onNext(file);
+                                                }
+                                            }, new Action1<Throwable>() {
+                                                @Override
+                                                public void call(Throwable throwable) {
+                                                    subscriber.onError(throwable);
+                                                }
+                                            });
+                                }
+                            };
+                        }
+                    }).flatMap(new Func1<File, Observable<File>>() {
                         @Override
-                        public void onNext(Uri uri) {
-                            RxFileUtils.getFileUrlWithAuthority(Init.getApplication(), uri)
-                                    .subscribe(new Action1<File>() {
-                                        @Override
-                                        public void call(File file) {
-                                            subscriber.onNext(file);
-                                        }
-                                    }, new Action1<Throwable>() {
-                                        @Override
-                                        public void call(Throwable throwable) {
-                                            subscriber.onError(throwable);
-                                        }
-                                    });
-                        }
-                    };
-                }
-            }).flatMap(new Func1<File, Observable<File>>() {
-                @Override
-                public Observable<File> call(final File file) {
-                    if (getIntent().getBooleanExtra(NEED_COMPRESS, true)) {
-                        //小于1.5倍压缩目标的不压缩
-                        if (file.length() <= getIntent().getIntExtra(MAX_SIZE_IN_KIB, 700) * 1024 * 1.5) {
-                            return Observable.just(file);
-                        }
+                        public Observable<File> call(final File file) {
+                            if (getIntent().getBooleanExtra(NEED_COMPRESS, true)) {
+                                //小于1.5倍压缩目标的不压缩
+                                if (file.length() <= getIntent().getIntExtra(MAX_SIZE_IN_KIB, 700) * 1024 * 1.5) {
+                                    return Observable.just(file);
+                                }
 
-                        return Luban.compress(GetImageActivity.this, file)
-                                .setMaxSize(getIntent().getIntExtra(MAX_SIZE_IN_KIB, 700))
-                                .setMaxWidth(getIntent().getIntExtra(MAX_WIDTH_IN_PX, 1920))
-                                .setMaxHeight(getIntent().getIntExtra(MAX_HEIGHT_IN_PX, 1920))
-                                .putGear(Luban.CUSTOM_GEAR).asObservable()
-                                .map(new Func1<File, File>() {
-                                    @Override
-                                    public File call(File out) {
-                                        copyExif(file, out);
-                                        return out;
-                                    }
-                                });
+                                return Luban.compress(GetImageActivity.this, file)
+                                        .setMaxSize(getIntent().getIntExtra(MAX_SIZE_IN_KIB, 700))
+                                        .setMaxWidth(getIntent().getIntExtra(MAX_WIDTH_IN_PX, 1920))
+                                        .setMaxHeight(getIntent().getIntExtra(MAX_HEIGHT_IN_PX, 1920))
+                                        .putGear(Luban.CUSTOM_GEAR).asObservable()
+                                        .map(new Func1<File, File>() {
+                                            @Override
+                                            public File call(File out) {
+                                                copyExif(file, out);
+                                                return out;
+                                            }
+                                        });
 
-                    } else {
-                        return Observable.just(file);
-                    }
-                }
-            })
+                            } else {
+                                return Observable.just(file);
+                            }
+                        }
+                    })
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(new Subscriber<File>() {
@@ -366,9 +367,9 @@ public class GetImageActivity extends Activity {
         File ans;
         try {
             ans = FileUtils.getCacheFile("corp-" + image.getName());
-            Crop.of(Uri.fromFile(image), Uri.fromFile(ans))
-                    .withAspect(getIntent().getIntExtra(CORP_WIDTH, 1), getIntent().getIntExtra(CORP_HEIGHT, 1))
-                    .start(this, CORP_PHOTO);
+            UCrop.of(Uri.fromFile(image), Uri.fromFile(ans))
+                    .withAspectRatio(getIntent().getIntExtra(CORP_WIDTH, 1), getIntent().getIntExtra(CORP_HEIGHT, 1))
+                    .start(this);
             corpedImage = Uri.fromFile(ans);
             return;
         } catch (IOException e) {

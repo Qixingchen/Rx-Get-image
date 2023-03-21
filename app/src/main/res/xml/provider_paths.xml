@@ -7,8 +7,8 @@
 
     <external-cache-path
         name="my_images_external"
-        path=""/>
+        path="."/>
     <cache-path
         name="my_images"
-        path=""/>
+        path="."/>
 </paths>

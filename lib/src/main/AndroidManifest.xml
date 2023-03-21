@@ -1,20 +1,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="moe.xing.getimage">
+    package="moe.xing.getimage">
 
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false"/>
 
-    <application>
+    <application android:exported="true">
         <activity
             android:name=".GetImageActivity"
             android:launchMode="singleTop"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
 
-        <activity android:name="com.soundcloud.android.crop.CropImageActivity"/>
-
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -22,6 +20,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/get_image_provider"/>
         </provider>
+
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
     </application>
 

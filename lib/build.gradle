@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'maven-publish'
 //apply plugin: 'com.github.kt3k.coveralls'
 //apply plugin: 'jacoco'
 
@@ -11,7 +11,7 @@ android {
         targetSdkVersion rootProject.ext.sdk_version
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     buildTypes {
         release {
@@ -40,54 +40,34 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    androidTestCompile('androidx.test.espresso:espresso-core:3.1.0', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    testCompile 'junit:junit:4.12'
+    testCompile 'junit:junit:4.13.2'
 
     compile "com.github.Qixingchen:Rx-Utils:V1.2.6"
-    compile "com.android.support:appcompat-v7:$supportLibraryVersion"
-    compile "com.android.support:exifinterface:$supportLibraryVersion"
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation "androidx.exifinterface:exifinterface:1.3.6"
     //corp
-    compile 'com.soundcloud.android:android-crop:1.0.1@aar'
+    implementation 'com.github.yalantis:ucrop:2.2.6'
     //luban 压缩
+    //noinspection GradleDependency 不更新 因为 rx 版本不一致
     compile('me.shaohui.advancedluban:library:1.3.3'
 //            , {
 //        exclude group: 'io.reactivex.rxjava2', module: 'rxjava'}
     )
 }
-// build a jar with source files
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.qixingchen'
+                artifactId = 'Rx-Get-image'
+                version = '2.0'
+            }
+        }
+    }
 }
-
-task javadoc(type: Javadoc) {
-    failOnError false
-    source = android.sourceSets.main.java.sourceFiles
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    classpath += configurations.compile
-}
-
-// build a jar with javadoc
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-[javadoc]*.options*.encoding = 'UTF-8'
-[javadoc]*.options*.charSet = 'UTF-8'
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
-}
-
-//coveralls {
-//    jacocoReportPath = "${buildDir}/reports/jacoco/debug/jacoco.xml"
-//}
-//
-//tasks.coveralls {
-//    dependsOn 'assembleDebugUnitTest'
-//    onlyIf { System.env.'CI' }
-//}
